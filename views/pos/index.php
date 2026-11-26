@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../auth.php';
+require_login();
+
 require_once 'config/database.php';
 require_once 'models/Menu.php';
 
@@ -292,7 +295,8 @@ async function submitOrder() {
         const response = await fetch('controllers/process_order.php', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify(payload)
         });

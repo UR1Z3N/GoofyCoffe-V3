@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/auth.php';
+require_login();
+
 // Main Router & Layout
 $page = isset($_GET['page']) ? $_GET['page'] : 'pos';
 
@@ -13,6 +16,7 @@ if (!in_array($page, $allowed_pages)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Goofycafe POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -58,6 +62,13 @@ if (!in_array($page, $allowed_pages)) {
             <a href="?page=report" class="px-4 py-2 rounded-lg transition-colors <?= $page == 'report' ? 'bg-green-800 font-bold' : 'hover:bg-green-600' ?>">
                 <i class="fas fa-chart-line mr-2"></i>Laporan
             </a>
+            <span class="px-3 py-2 text-sm"><?= htmlspecialchars($_SESSION['user']['username'], ENT_QUOTES, 'UTF-8') ?></span>
+            <form action="logout.php" method="post" class="inline-flex">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+                <button class="px-4 py-2 rounded-lg border border-green-500 hover:bg-green-600" type="submit">
+                    <i class="fas fa-right-from-bracket mr-2"></i>Keluar
+                </button>
+            </form>
         </nav>
     </header>
 

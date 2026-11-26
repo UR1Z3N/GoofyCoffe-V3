@@ -1,5 +1,7 @@
 <?php
 header('Content-Type: application/json');
+require_once __DIR__ . '/../auth.php';
+require_login(true);
 
 require_once '../config/database.php';
 require_once '../models/Order.php';

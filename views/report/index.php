@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../auth.php';
+require_login();
+
 require_once 'config/database.php';
 require_once 'models/Report.php';
 
