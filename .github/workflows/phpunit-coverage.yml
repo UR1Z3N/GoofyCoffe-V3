@@ -1,0 +1,31 @@
+name: PHPUnit coverage
+
+on:
+  push:
+    branches:
+      - testing
+  pull_request:
+    branches:
+      - testing
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: xdebug
+      - run: composer install --no-interaction --prefer-dist
+      - run: mkdir -p coverage
+      - name: Run tests and generate coverage
+        run: vendor/bin/phpunit --path-coverage --coverage-text --coverage-html coverage/html --coverage-clover coverage/clover.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phpunit-coverage
+          path: coverage/

@@ -1,4 +1,5 @@
 <?php
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../models/Order.php';
@@ -34,6 +35,7 @@ final class SpyPdoStatement extends PDOStatement {
     }
 }
 
+#[CoversMethod(Order::class, 'getOrdersHistory')]
 final class OrderHistoryTest extends TestCase {
     public function testAppliesDateRangeAndBindsBothDates(): void {
         $connection = new FakeDatabaseConnection();

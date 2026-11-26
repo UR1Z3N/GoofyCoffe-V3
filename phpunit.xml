@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/autoload.php" colors="true">
+    <source>
+        <include>
+            <file>models/Order.php</file>
+        </include>
+    </source>
     <testsuites>
         <testsuite name="Goofy Coffee unit tests">
             <directory>tests</directory>
