@@ -1,5 +1,7 @@
 <?php
-class UserRepository {
+require_once __DIR__ . '/interfaces/UserRepositoryInterface.php';
+
+class UserRepository implements UserRepositoryInterface {
     private PDO $connection;
 
     public function __construct(PDO $connection) {

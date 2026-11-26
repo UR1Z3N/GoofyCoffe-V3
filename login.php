@@ -7,6 +7,8 @@ if (isset($_SESSION['user']['id'])) {
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/UserRepository.php';
+require_once __DIR__ . '/models/NativePasswordVerifier.php';
+require_once __DIR__ . '/models/UserAuthenticator.php';
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,14 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     $user = null;
-    if (is_string($username) && is_string($password) && $username !== '' && $password !== '') {
+    if (is_string($username) && is_string($password)) {
         $database = new Database();
         $users = new UserRepository($database->getConnection());
-        $user = $users->findByUsername(trim($username));
-        if ($user && password_verify($password, $user['password_hash'])) {
+        $authenticator = new UserAuthenticator($users, new NativePasswordVerifier());
+        $user = $authenticator->authenticate($username, $password);
+        if ($user !== null) {
             session_regenerate_id(true);
             $_SESSION['user'] = [
-                'id' => (int)$user['id'],
+                'id' => $user['id'],
                 'username' => $user['username'],
             ];
             unset($_SESSION['csrf_token']);
