@@ -3,7 +3,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../models/Order.php';
 
-final class FakeDatabaseConnection {
+final class FakeDatabaseConnection extends PDO {
     public string $preparedQuery = '';
     public SpyPdoStatement $statement;
 
@@ -11,17 +11,19 @@ final class FakeDatabaseConnection {
         $this->statement = new SpyPdoStatement();
     }
 
-    public function prepare(string $query): SpyPdoStatement {
+    public function prepare(string $query, array $options = []): PDOStatement|false {
         $this->preparedQuery = $query;
         return $this->statement;
     }
 }
 
-final class SpyPdoStatement {
+final class SpyPdoStatement extends PDOStatement {
     public array $boundParameters = [];
     public int $executeCalls = 0;
 
-    public function bindParam($parameter, &$variable, $dataType = PDO::PARAM_STR, $length = null, $driverOptions = null): bool {
+    public function __construct() {}
+
+    public function bindParam(string|int $parameter, mixed &$variable, int $dataType = PDO::PARAM_STR, int $length = 0, mixed $driverOptions = null): bool {
         $this->boundParameters[$parameter] = $variable;
         return true;
     }
@@ -40,8 +42,8 @@ final class OrderHistoryTest extends TestCase {
         $statement = $order->getOrdersHistory('2026-01-01', '2026-01-31');
 
         self::assertSame(
-            "SELECT * FROM orders WHERE status = 'Selesai' AND DATE(created_at) BETWEEN :start_date AND :end_date ORDER BY created_at DESC",
-            $connection->preparedQuery
+            "SELECT o.*, pm.name as payment_method_name FROM orders o LEFT JOIN payment_methods pm ON o.payment_method_id = pm.id WHERE o.status = 'Selesai' AND DATE(o.created_at) BETWEEN :start_date AND :end_date ORDER BY o.created_at DESC",
+            preg_replace('/\s+/', ' ', trim($connection->preparedQuery))
         );
         self::assertSame([
             ':start_date' => '2026-01-01',
@@ -58,8 +60,8 @@ final class OrderHistoryTest extends TestCase {
         $statement = $order->getOrdersHistory();
 
         self::assertSame(
-            "SELECT * FROM orders WHERE status = 'Selesai' ORDER BY created_at DESC",
-            $connection->preparedQuery
+            "SELECT o.*, pm.name as payment_method_name FROM orders o LEFT JOIN payment_methods pm ON o.payment_method_id = pm.id WHERE o.status = 'Selesai' ORDER BY o.created_at DESC",
+            preg_replace('/\s+/', ' ', trim($connection->preparedQuery))
         );
         self::assertSame([], $connection->statement->boundParameters);
         self::assertSame(1, $connection->statement->executeCalls);

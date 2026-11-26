@@ -15,56 +15,91 @@ $menus = $stmtMenus->fetchAll(PDO::FETCH_ASSOC);
 $stmtCategories = $menuModel->getCategories();
 $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch Payment Methods for Modal
+$stmtPM = $db->query("SELECT id, code, name FROM payment_methods WHERE is_active = 1 ORDER BY id ASC");
+$paymentMethods = $stmtPM->fetchAll(PDO::FETCH_ASSOC);
+
 // Pass menu data to JS
 $menuJson = json_encode($menus);
+$pmJson = json_encode($paymentMethods);
+?>
+<?php
+$makanan = [];
+$minuman = [];
+foreach ($categories as $cat) {
+    if (strtolower($cat['type']) == 'makanan') $makanan[] = $cat;
+    else $minuman[] = $cat;
+}
 ?>
 
-<!-- Sidebar Categories -->
-<aside class="w-64 bg-white p-4 border-r border-gray-200 overflow-y-auto">
-    <?php
-    $currentType = '';
-    foreach ($categories as $cat) {
-        if ($currentType != $cat['type']) {
-            $currentType = $cat['type'];
-            echo '<h2 class="text-xs font-bold text-gray-500 mb-2 mt-4 uppercase">' . $currentType . '</h2>';
-            echo '<ul class="space-y-1 mb-2">';
-        }
-        echo '<li class="p-2 rounded cursor-pointer text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition" onclick="filterCategory(\''. $cat['name'] .'\')">';
-        echo $cat['name'];
-        echo '</li>';
-        
-        // If it's the last item of the type or next item is different type, close ul is handled implicitly by starting new one, but let's just use simple list here
-    }
-    echo '</ul>';
-    ?>
-    <div class="mt-4 pt-4 border-t border-gray-100">
-        <button onclick="filterCategory('all')" class="w-full text-left p-2 rounded text-sm text-green-700 font-semibold bg-green-50">Tampilkan Semua</button>
+
+<aside id="tour-category" class="w-full lg:w-64 bg-[#f9f9f9] border-b lg:border-b-0 lg:border-r border-gray-200 overflow-x-auto lg:overflow-y-auto flex-shrink-0 flex flex-row lg:flex-col z-10 relative">
+    <div class="py-2 lg:py-4 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible items-center lg:items-stretch w-full">
+
+        <?php if(!empty($makanan)): ?>
+        <div class="flex lg:block items-center mx-2 lg:mx-0 shrink-0">
+            <h2 class="text-[13px] font-black text-gray-800 px-2 lg:px-4 mb-0 lg:mb-1 mt-0 lg:mt-2 uppercase flex items-center tracking-wider mr-2 lg:mr-0">
+                <i class="fas fa-hamburger text-green-600 mr-2 text-sm"></i> MAKANAN
+            </h2>
+            <ul class="flex flex-row lg:flex-col lg:mb-4 space-x-2 lg:space-x-0">
+                <?php foreach($makanan as $cat): ?>
+                <li class="category-item shrink-0 cursor-pointer text-[13px] text-gray-700 hover:bg-gray-200 transition py-1.5 lg:py-2 px-3 lg:px-4 lg:pl-10 relative rounded-full lg:rounded-none border border-gray-200 lg:border-none" data-category="<?= $cat['name'] ?>" onclick="filterCategory('<?= $cat['name'] ?>', this)">
+                    <div class="active-indicator absolute left-0 top-0 bottom-0 w-2 bg-green-600 hidden lg:block"></div>
+                    <span class="category-text whitespace-nowrap"><?= $cat['name'] ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
+
+
+        <?php if(!empty($minuman)): ?>
+        <div class="flex lg:block items-center mx-2 lg:mx-0 shrink-0">
+            <h2 class="text-[13px] font-black text-gray-800 px-2 lg:px-4 mb-0 lg:mb-1 mt-0 lg:mt-4 uppercase flex items-center tracking-wider mr-2 lg:mr-0 ml-4 lg:ml-0 border-l border-gray-300 lg:border-none pl-4 lg:pl-4">
+                <i class="fas fa-coffee text-green-600 mr-2 text-sm"></i> MINUMAN
+            </h2>
+            <ul class="flex flex-row lg:flex-col lg:mb-4 space-x-2 lg:space-x-0">
+                <?php foreach($minuman as $cat): ?>
+                <li class="category-item shrink-0 cursor-pointer text-[13px] text-gray-700 hover:bg-gray-200 transition py-1.5 lg:py-2 px-3 lg:px-4 lg:pl-10 relative rounded-full lg:rounded-none border border-gray-200 lg:border-none" data-category="<?= $cat['name'] ?>" onclick="filterCategory('<?= $cat['name'] ?>', this)">
+                    <div class="active-indicator absolute left-0 top-0 bottom-0 w-2 bg-green-600 hidden lg:block"></div>
+                    <span class="category-text whitespace-nowrap"><?= $cat['name'] ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="mt-auto p-4 border-t lg:border-l border-gray-200 bg-white min-w-[150px] lg:min-w-0 flex items-center justify-center">
+        <button onclick="filterCategory('all', null)" class="w-full text-center py-2.5 rounded text-sm text-green-700 font-bold bg-green-50 hover:bg-green-100 transition border border-green-200">
+            Tampilkan Semua
+        </button>
     </div>
 </aside>
 
-<!-- Main Menu Area -->
-<main class="flex-1 p-6 overflow-y-auto bg-gray-50 relative">
-    <div id="menu-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-24">
+
+<main id="tour-menu" class="flex-1 p-4 lg:p-6 overflow-y-auto bg-gray-50 relative min-h-[50vh] lg:min-h-0">
+    <div id="menu-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-24">
         <!-- Rendered by JS -->
     </div>
 </main>
 
-<!-- Cart Sidebar -->
-<aside class="w-96 bg-white flex flex-col border-l border-gray-200 shadow-[-4px_0_15px_rgba(0,0,0,0.02)]">
+
+<aside id="tour-cart" class="w-full lg:w-96 bg-white flex flex-col lg:border-l border-t lg:border-t-0 border-gray-200 shadow-[-4px_0_15px_rgba(0,0,0,0.02)] h-auto lg:h-full">
     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
         <h3 class="font-bold text-gray-800 text-lg">Keranjang Pesanan</h3>
         <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full" id="cart-count">0 item</span>
     </div>
-    
+
     <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="cart-items">
-        <!-- Cart Items -->
+
         <div class="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
             <i class="fas fa-shopping-basket text-4xl mb-2"></i>
             <p>Keranjang masih kosong</p>
         </div>
     </div>
 
-    <!-- Cart Footer -->
+
     <div class="p-5 bg-white border-t border-gray-200 shadow-[0_-4px_15px_rgba(0,0,0,0.02)]">
         <div class="flex justify-between items-center mb-4">
             <span class="text-gray-600 font-medium">Total Tagihan</span>
@@ -76,7 +111,7 @@ $menuJson = json_encode($menus);
     </div>
 </aside>
 
-<!-- Payment Modal -->
+
 <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white rounded-2xl w-[400px] shadow-2xl overflow-hidden transform transition-all">
         <div class="bg-green-600 p-4 text-white flex justify-between items-center">
@@ -88,25 +123,26 @@ $menuJson = json_encode($menus);
                 <p class="text-sm text-gray-500 mb-1">Total Tagihan</p>
                 <p class="text-3xl font-bold text-gray-900" id="modal-total">Rp 0</p>
             </div>
-            
+
             <div class="space-y-4">
                 <label class="block">
                     <span class="text-gray-700 text-sm font-bold mb-2 block">Metode Pembayaran</span>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="Tunai" class="peer sr-only" checked>
-                            <div class="rounded-lg border-2 border-gray-200 p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-money-bill-wave text-green-600 mb-1"></i>
-                                <div class="font-semibold text-gray-700">Tunai</div>
+                        <?php if (empty($paymentMethods)): ?>
+                            <div class="col-span-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                Belum ada metode pembayaran aktif. Jalankan migration accounting terlebih dahulu.
                             </div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="Digital" class="peer sr-only">
-                            <div class="rounded-lg border-2 border-gray-200 p-3 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-qrcode text-blue-600 mb-1"></i>
-                                <div class="font-semibold text-gray-700">QRIS/Digital</div>
-                            </div>
-                        </label>
+                        <?php else: ?>
+                            <?php foreach ($paymentMethods as $index => $method): ?>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment_method_id" value="<?= (int) $method['id'] ?>" class="peer sr-only" <?= $index === 0 ? 'checked' : '' ?>>
+                                    <div class="rounded-lg border-2 border-gray-200 p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
+                                        <i class="fas fa-credit-card text-green-600 mb-1"></i>
+                                        <div class="font-semibold text-gray-700"><?= htmlspecialchars($method['name']) ?></div>
+                                    </div>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </label>
             </div>
@@ -124,41 +160,55 @@ const menus = <?= $menuJson ?>;
 let cart = [];
 let currentFilter = 'all';
 
+function formatPriceK(number) {
+    return (number / 1000) + 'k';
+}
+
 function formatRupiah(number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 }
 
+function filterCategory(cat, element) {
+    currentFilter = cat;
+
+    // Reset all items
+    document.querySelectorAll('.category-item').forEach(el => {
+        el.classList.remove('bg-[#e0e0e0]', 'text-green-600', 'font-semibold');
+        el.classList.add('text-gray-700', 'hover:bg-gray-200');
+        el.querySelector('.active-indicator').classList.add('hidden');
+    });
+
+    // Set active item
+    if (cat !== 'all' && element) {
+        element.classList.add('bg-[#e0e0e0]', 'text-green-600', 'font-semibold');
+        element.classList.remove('text-gray-700', 'hover:bg-gray-200');
+        element.querySelector('.active-indicator').classList.remove('hidden');
+    }
+
+    renderMenus();
+}
+
 function renderMenus() {
-    const grid = document.getElementById('menu-grid');
-    grid.innerHTML = '';
-    
+    const container = document.getElementById('menu-container');
+    container.innerHTML = '';
+
     const filteredMenus = currentFilter === 'all' ? menus : menus.filter(m => m.category_name === currentFilter);
-    
+
     filteredMenus.forEach(menu => {
         const imagePath = `assets/images/${menu.image}`;
-        
-        grid.innerHTML += `
-            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow group flex flex-col justify-between h-full cursor-pointer" onclick="addToCart(${menu.id})">
-                <div>
-                    <div class="menu-image-container mb-3 group-hover:opacity-90 transition-opacity">
-                        <img src="${imagePath}" onerror="this.src='assets/images/placeholder.png'" alt="${menu.name}">
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-800 leading-tight mb-1 line-clamp-2">${menu.name}</h3>
+
+        container.innerHTML += `
+            <div class="bg-white p-4 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] text-center cursor-pointer transition-all border-2 border-transparent hover:border-blue-500 focus:border-blue-500 active:border-blue-500 group flex flex-col justify-between" onclick="addToCart(${menu.id})">
+                <div class="flex justify-center mb-3 h-28 items-center">
+                    <img src="${imagePath}" onerror="this.src='assets/images/placeholder.png'" alt="${menu.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
                 </div>
-                <div class="mt-2">
-                    <p class="text-green-600 font-bold text-sm mb-3">${formatRupiah(menu.price)}</p>
-                    <button class="w-full bg-gray-50 text-green-600 border border-green-200 text-xs font-semibold py-2 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
-                        + Tambah
-                    </button>
+                <div>
+                    <h3 class="text-[15px] font-bold text-[#1e1b4b] leading-tight mb-1 line-clamp-2">${menu.name}</h3>
+                    <p class="text-gray-500 text-[13px]">${formatRupiah(menu.price)}</p>
                 </div>
             </div>
         `;
     });
-}
-
-function filterCategory(cat) {
-    currentFilter = cat;
-    renderMenus();
 }
 
 function addToCart(menuId) {
@@ -239,9 +289,9 @@ function renderCart() {
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                
+
                 <input type="text" placeholder="Catatan (Opsional)" value="${item.notes}" onchange="updateNotes(${index}, this.value)" class="text-xs w-full bg-gray-50 border border-gray-200 rounded p-1.5 mb-2 focus:outline-none focus:border-green-400 transition-colors">
-                
+
                 <div class="flex justify-between items-center">
                     <span class="text-sm font-bold text-gray-800">${formatRupiah(item.price * item.quantity)}</span>
                     <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
@@ -273,17 +323,22 @@ function closePaymentModal() {
 async function submitOrder() {
     if (cart.length === 0) return;
 
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    const selectedPayment = document.querySelector('input[name="payment_method_id"]:checked');
+    if (!selectedPayment) {
+        alert('Pilih metode pembayaran terlebih dahulu.');
+        return;
+    }
+    const paymentMethodId = Number(selectedPayment.value);
     const btn = document.getElementById('btn-submit-order');
     const spinner = document.getElementById('submit-spinner');
     const text = document.getElementById('submit-text');
-    
+
     // Calculate total
     const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     const payload = {
         total_amount: totalAmount,
-        payment_method: paymentMethod,
+        payment_method_id: paymentMethodId,
         items: cart
     };
 
@@ -326,4 +381,36 @@ document.head.insertAdjacentHTML('beforeend', '<style>@keyframes fadeIn { from {
 
 // Initial render
 renderMenus();
+
+// --- Interactive Tour (Driver.js) ---
+const driver = window.driver.js.driver;
+const driverObj = driver({
+  showProgress: true,
+  animate: true,
+  nextBtnText: 'Lanjut',
+  prevBtnText: 'Kembali',
+  doneBtnText: 'Selesai',
+  steps: [
+    { popover: { title: 'Selamat Datang!', description: 'Mari ikuti panduan singkat untuk menggunakan fitur kasir Goofycafe POS.' } },
+    { element: '#main-header', popover: { title: 'Navigasi Utama', description: 'Di sini Anda dapat berpindah antara halaman Kasir, Riwayat Transaksi, dan Laporan Penjualan.', side: "bottom", align: 'start' } },
+    { element: '#tour-category', popover: { title: 'Kategori Menu', description: 'Gunakan panel ini untuk memfilter menu berdasarkan kategori makanan atau minuman.', side: "right", align: 'start' } },
+    { element: '#tour-menu', popover: { title: 'Daftar Menu', description: 'Klik pada menu yang diinginkan untuk menambahkannya ke dalam keranjang pesanan.', side: "top", align: 'start' } },
+    { element: '#tour-cart', popover: { title: 'Keranjang Pesanan', description: 'Semua pesanan yang dipilih akan masuk ke sini. Anda bisa mengubah jumlah pesanan atau menambahkan catatan khusus.', side: "left", align: 'start' } },
+    { element: '#btn-process', popover: { title: 'Proses Pembayaran', description: 'Jika pesanan sudah sesuai, klik tombol ini untuk memilih metode pembayaran dan menyelesaikan transaksi.', side: "top", align: 'center' } }
+  ]
+});
+
+function startTour() {
+    driverObj.drive();
+}
+
+// Auto-start tour on first visit
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('goofycafe_tour_done')) {
+        setTimeout(() => {
+            startTour();
+            localStorage.setItem('goofycafe_tour_done', 'true');
+        }, 500);
+    }
+});
 </script>

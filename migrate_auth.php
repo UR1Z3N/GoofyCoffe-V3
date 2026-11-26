@@ -9,7 +9,6 @@ try {
     $db->exec($sql);
     echo 'Auth migration successful.';
 } catch (PDOException $exception) {
-    error_log('Auth migration failed: ' . $exception->getMessage());
     http_response_code(500);
-    echo 'Auth migration failed. Check the PHP error log for details.';
+    echo 'Auth migration failed: ' . htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8');
 }

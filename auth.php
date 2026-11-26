@@ -29,7 +29,8 @@ function require_login(bool $json = false): void {
         $scriptPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
         $basePath = str_replace('\\', '/', dirname($scriptPath));
         $basePath = preg_replace('~/(?:controllers|views)(?:/.*)?$~', '', $basePath);
-        header('Location: ' . rtrim($basePath, '/') . '/login.php');
+        $basePath = rtrim($basePath, '/');
+        header('Location: ' . $basePath . '/login.php');
     }
     exit;
 }

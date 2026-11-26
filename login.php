@@ -13,27 +13,24 @@ require_once __DIR__ . '/models/UserAuthenticator.php';
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_valid_csrf();
+    $database = new Database();
+    $users = new UserRepository($database->getConnection());
+    $authenticator = new UserAuthenticator($users, new NativePasswordVerifier());
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
+    $user = is_string($username) && is_string($password)
+        ? $authenticator->authenticate($username, $password)
+        : null;
 
-    $user = null;
-    if (is_string($username) && is_string($password)) {
-        $database = new Database();
-        $users = new UserRepository($database->getConnection());
-        $authenticator = new UserAuthenticator($users, new NativePasswordVerifier());
-        $user = $authenticator->authenticate($username, $password);
-        if ($user !== null) {
-            session_regenerate_id(true);
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'username' => $user['username'],
-            ];
-            unset($_SESSION['csrf_token']);
-            header('Location: index.php');
-            exit;
-        }
+    if ($user === null) {
+        $error = 'Username atau password salah.';
+    } else {
+        session_regenerate_id(true);
+        $_SESSION['user'] = $user;
+        unset($_SESSION['csrf_token']);
+        header('Location: index.php');
+        exit;
     }
-    $error = 'Username atau password salah.';
 }
 ?>
 <!DOCTYPE html>
@@ -47,14 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <main class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
         <div class="text-center mb-7">
+            <img src="assets/images/brand_logo.png" alt="Goofy Coffee" class="h-16 mx-auto mb-3">
             <h1 class="text-2xl font-bold text-gray-900">Login Goofy Coffee</h1>
             <p class="text-sm text-gray-500 mt-1">Masuk dengan akun pengguna Anda.</p>
         </div>
         <?php if ($error !== ''): ?>
             <p role="alert" class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
-        <?php endif; ?>
-        <?php if (isset($_GET['registered'])): ?>
-            <p class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm">Akun berhasil dibuat. Silakan masuk.</p>
         <?php endif; ?>
         <form method="post" class="space-y-4">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">

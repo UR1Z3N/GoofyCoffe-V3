@@ -17,16 +17,26 @@ final class FakeUserRepository implements UserRepositoryInterface {
         $this->lookedUpUsernames[] = $username;
         return $this->users[$username] ?? null;
     }
+
+    public function createUser(string $username, string $passwordHash): void {
+        $this->users[$username] = ['id' => count($this->users) + 1, 'username' => $username, 'password_hash' => $passwordHash];
+    }
 }
 
 final class SpyPasswordVerifier implements PasswordVerifierInterface {
     public int $verifyCalls = 0;
+    public ?string $receivedPassword = null;
     public ?string $receivedHash = null;
 
     public function __construct(private bool $verificationResult = true) {}
 
+    public function hash(string $password): string {
+        return 'hashed:' . $password;
+    }
+
     public function verify(string $password, string $passwordHash): bool {
         $this->verifyCalls++;
+        $this->receivedPassword = $password;
         $this->receivedHash = $passwordHash;
         return $this->verificationResult;
     }
@@ -48,12 +58,22 @@ final class UserAuthenticatorTest extends TestCase {
         self::assertSame('stored-hash', $passwords->receivedHash);
     }
 
-    public function testRejectsEmptyUsernameWithoutLookingUpUser(): void {
+    public function testRejectsEmptyCredentialsWithoutLookingUpUser(): void {
         $users = new FakeUserRepository();
         $passwords = new SpyPasswordVerifier();
         $authenticator = new UserAuthenticator($users, $passwords);
 
         self::assertNull($authenticator->authenticate('', 'password'));
+        self::assertSame([], $users->lookedUpUsernames);
+        self::assertSame(0, $passwords->verifyCalls);
+    }
+
+    public function testRejectsEmptyPasswordWithoutLookingUpUser(): void {
+        $users = new FakeUserRepository();
+        $passwords = new SpyPasswordVerifier();
+        $authenticator = new UserAuthenticator($users, $passwords);
+
+        self::assertNull($authenticator->authenticate('barista', ''));
         self::assertSame([], $users->lookedUpUsernames);
         self::assertSame(0, $passwords->verifyCalls);
     }
@@ -77,15 +97,5 @@ final class UserAuthenticatorTest extends TestCase {
 
         self::assertNull($authenticator->authenticate('barista', 'wrong-password'));
         self::assertSame(1, $passwords->verifyCalls);
-    }
-
-    public function testRejectsEmptyPasswordWithoutLookingUpUser(): void {
-        $users = new FakeUserRepository();
-        $passwords = new SpyPasswordVerifier();
-        $authenticator = new UserAuthenticator($users, $passwords);
-
-        self::assertNull($authenticator->authenticate('barista', ''));
-        self::assertSame([], $users->lookedUpUsernames);
-        self::assertSame(0, $passwords->verifyCalls);
     }
 }

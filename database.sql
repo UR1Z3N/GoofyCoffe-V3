@@ -45,17 +45,22 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 -- Insert dummy categories
 INSERT INTO categories (name, type) VALUES 
-('Spesial Nasi Goreng', 'makanan'),
-('Spesial Magelangan', 'makanan'),
-('Susu', 'minuman'),
-('Kopi', 'minuman');
+('Coffee', 'minuman'),
+('Non Coffee', 'minuman'),
+('Food', 'makanan');
 
 -- Insert dummy menus
 INSERT INTO menus (category_id, name, price, image) VALUES
-(1, 'Nasgor Biasa', 10000, 'nasgor_biasa.png'),
-(1, 'Nasgor Ati', 13000, 'nasgor_ati.png'),
-(1, 'Nasgor Ayam', 13000, 'nasgor_ayam.png'),
-(2, 'Magelangan Biasa', 11000, 'placeholder.png'),
-(3, 'Susu Sirup', 10000, 'susu_sirup.png'),
-(3, 'Es Teh', 4000, 'es_teh.png'),
-(4, 'Kopi Hitam', 5000, 'placeholder.png');
+(1, 'Espresso', 10000, 'kopi_hitam.png'),
+(1, 'Americano', 12000, 'kopi_hitam.png'),
+(1, 'Kopi Cream', 15000, 'kopi_hitam.png'),
+(1, 'Vietnam Drip', 15000, 'kopi_hitam.png'),
+(1, 'Mocachino', 20000, 'kopi_hitam.png'),
+(1, 'Milo Coffee Cream', 20000, 'kopi_hitam.png'),
+(2, 'Tea Shake (Blackcurrant / leci)', 15000, 'es_teh.png'),
+(2, 'Milo Cream', 18000, 'susu_sirup.png'),
+(2, 'Susu Coklat', 18000, 'susu_sirup.png'),
+(2, 'Josua', 8000, 'es_teh.png'),
+(2, 'All Sachet', 8000, 'placeholder.png'),
+(3, 'Mie Goreng/Kuah (Mie,Telur,Nasi)', 15000, 'nasgor_biasa.png'),
+(3, 'Kentang Goreng', 20000, 'placeholder.png');

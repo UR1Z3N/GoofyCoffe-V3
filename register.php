@@ -7,9 +7,9 @@ if (isset($_SESSION['user']['id'])) {
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/UserRepository.php';
+require_once __DIR__ . '/models/NativePasswordVerifier.php';
 
 $error = '';
-$usernameValue = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_valid_csrf();
     $usernameInput = $_POST['username'] ?? '';
@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = is_string($usernameInput) ? trim($usernameInput) : '';
     $password = is_string($passwordInput) ? $passwordInput : '';
     $confirmation = is_string($confirmationInput) ? $confirmationInput : '';
-    $usernameValue = is_string($usernameInput) ? $usernameInput : '';
 
     if (!preg_match('/^[A-Za-z0-9_]{3,32}$/', $username)) {
         $error = 'Username harus 3-32 karakter dan hanya boleh berisi huruf, angka, atau garis bawah.';
@@ -29,8 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $database = new Database();
         $users = new UserRepository($database->getConnection());
+        $passwords = new NativePasswordVerifier();
         try {
-            $users->createUser($username, password_hash($password, PASSWORD_DEFAULT));
+            $users->createUser($username, $passwords->hash($password));
             header('Location: login.php?registered=1');
             exit;
         } catch (PDOException $exception) {
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" class="space-y-4">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
             <label class="block text-sm font-semibold text-gray-700">Username
-                <input required minlength="3" maxlength="32" pattern="[A-Za-z0-9_]+" name="username" autocomplete="username" value="<?= htmlspecialchars($usernameValue, ENT_QUOTES, 'UTF-8') ?>" class="mt-1 w-full border rounded-lg px-3 py-2 font-normal">
+                <input required minlength="3" maxlength="32" pattern="[A-Za-z0-9_]+" name="username" autocomplete="username" value="<?= htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>" class="mt-1 w-full border rounded-lg px-3 py-2 font-normal">
             </label>
             <label class="block text-sm font-semibold text-gray-700">Password (minimal 8 karakter)
                 <input required minlength="8" type="password" name="password" autocomplete="new-password" class="mt-1 w-full border rounded-lg px-3 py-2 font-normal">

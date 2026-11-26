@@ -1,12 +1,12 @@
 <?php
+// Main Router & Layout
 require_once __DIR__ . '/auth.php';
 require_login();
 
-// Main Router & Layout
 $page = isset($_GET['page']) ? $_GET['page'] : 'pos';
 
 // Basic routing
-$allowed_pages = ['pos', 'history', 'report'];
+$allowed_pages = ['pos', 'history', 'report', 'faq'];
 if (!in_array($page, $allowed_pages)) {
     $page = 'pos';
 }
@@ -20,6 +20,8 @@ if (!in_array($page, $allowed_pages)) {
     <title>Goofycafe POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/driver.css"/>
+    <script src="assets/js/driver.js"></script>
     <style>
         .menu-image-container {
             width: 100%;
@@ -47,12 +49,20 @@ if (!in_array($page, $allowed_pages)) {
 <body class="bg-gray-50 h-screen flex flex-col font-sans">
 
     <!-- Header -->
-    <header class="bg-green-700 text-white p-4 flex items-center justify-between shadow-md z-10 relative">
-        <div class="flex items-center space-x-4">
-            <i class="fas fa-coffee text-2xl"></i>
-            <span class="font-bold text-xl tracking-wide">Goofycafe</span>
+    <header id="main-header" class="bg-green-700 text-white p-4 flex flex-col md:flex-row items-center justify-between shadow-md z-10 relative">
+        <div class="flex items-center space-x-3 mb-3 md:mb-0">
+            <!-- Tempat untuk Logo Brand (Ikon) -->
+            <div class="relative w-12 h-10 flex items-center">
+                <!-- Sesuaikan h-... dan -top-... jika ikon brand ingin lebih besar/kecil -->
+                <img src="assets/images/brand_logo.png" alt="Brand Logo" class="absolute -left-0 -top-1 h-50 w-auto object-contain">
+            </div>
+
+            <!-- Tempat untuk Logo Tulisan (Teks) -->
+            <div class="relative w-40 h-10 flex items-center">
+                <img src="assets/images/logo.png" alt="Text Logo" class="absolute left-0 -top-16 h-40 w-auto object-contain">
+            </div>
         </div>
-        <nav class="flex space-x-2">
+        <nav class="flex flex-wrap justify-center gap-2 mt-2 md:mt-0">
             <a href="?page=pos" class="px-4 py-2 rounded-lg transition-colors <?= $page == 'pos' ? 'bg-green-800 font-bold' : 'hover:bg-green-600' ?>">
                 <i class="fas fa-cash-register mr-2"></i>Kasir
             </a>
@@ -61,6 +71,14 @@ if (!in_array($page, $allowed_pages)) {
             </a>
             <a href="?page=report" class="px-4 py-2 rounded-lg transition-colors <?= $page == 'report' ? 'bg-green-800 font-bold' : 'hover:bg-green-600' ?>">
                 <i class="fas fa-chart-line mr-2"></i>Laporan
+            </a>
+            <?php if ($page == 'pos'): ?>
+            <button onclick="if(typeof startTour === 'function') startTour();" id="tour-help-btn" class="px-4 py-2 rounded-lg transition-colors hover:bg-green-600 border border-green-500 ml-2">
+                <i class="fas fa-question-circle mr-2"></i>Panduan
+            </button>
+            <?php endif; ?>
+            <a href="?page=faq" class="px-4 py-2 rounded-lg transition-colors <?= $page == 'faq' ? 'bg-green-800 font-bold' : 'hover:bg-green-600' ?> border border-green-500 ml-2">
+                <i class="fas fa-info-circle mr-2"></i>FAQ
             </a>
             <span class="px-3 py-2 text-sm"><?= htmlspecialchars($_SESSION['user']['username'], ENT_QUOTES, 'UTF-8') ?></span>
             <form action="logout.php" method="post" class="inline-flex">
@@ -73,7 +91,7 @@ if (!in_array($page, $allowed_pages)) {
     </header>
 
     <!-- Main Content Area -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
         <?php include "views/{$page}/index.php"; ?>
     </div>
 
