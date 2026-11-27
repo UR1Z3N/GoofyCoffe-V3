@@ -3,6 +3,11 @@
     <source>
         <include>
             <file>models/Order.php</file>
+            <file>models/Menu.php</file>
+            <file>models/Report.php</file>
+            <file>models/UserRepository.php</file>
+            <file>models/UserAuthenticator.php</file>
+            <file>models/NativePasswordVerifier.php</file>
         </include>
     </source>
     <testsuites>
